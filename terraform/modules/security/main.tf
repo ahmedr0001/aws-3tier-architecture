@@ -69,6 +69,14 @@ resource "aws_security_group" "db_sg" {
     }
   }
 
+  # Allow SSH from the Frontend Security Group for Ansible ProxyJump
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.frontend_sg.id] 
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

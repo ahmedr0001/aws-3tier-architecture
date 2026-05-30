@@ -16,25 +16,6 @@ resource "aws_key_pair" "main" {
   public_key = file("~/.ssh/3tier-key.pub")
 }
 
-# # Generate a secure private key natively in Terraform like do ssh-keygen -t rsa -b 4096
-# resource "tls_private_key" "main" {
-#   algorithm = "RSA"
-#   rsa_bits  = 4096
-# }
-
-# # Upload the public key to AWS to create the Key Pair
-# resource "aws_key_pair" "main" {
-#   key_name   = "3tier-ssh-key"
-#   public_key = tls_private_key.main.public_key_openssh
-# }
-
-# # Save the private key to your local laptop so Ansible can use it
-# resource "local_file" "private_key" {
-#   content         = tls_private_key.main.private_key_pem
-#   filename        = "${path.module}/3tier-ssh-key.pem"
-#   file_permission = "0400" # Sets strict read-only permissions required by SSH
-# }
-
 # Instantiate the Compute Module
 module "compute" {
   source = "./modules/compute"
@@ -51,4 +32,14 @@ module "compute" {
 
   # Injecting the SSH Key Name!
   key_name = aws_key_pair.main.key_name
+}
+
+# Generate Ansible Inventory
+resource "local_file" "ansible_inventory" {
+  content = templatefile("${path.module}/inventory.tpl", {
+    frontend_ip = module.compute.frontend_public_ip
+    backend_ip  = module.compute.backend_private_ip
+    db_ip       = module.compute.db_private_ip
+  })
+  filename = "${path.module}/../ansible/inventory.ini"
 }
