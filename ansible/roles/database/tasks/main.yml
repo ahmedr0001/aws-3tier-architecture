@@ -1,0 +1,52 @@
+---
+# LOAD SECRETS FROM VAULT
+- name: Load encrypted database credentials
+  include_vars: vault.yml
+
+# THE INSTALLATION
+- name: Update apt cache and install PostgreSQL
+  apt:
+    name: 
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - acl       #to fix the unprivileged user error 
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL is running and enabled
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+# THE USER & DATABASE CREATION
+- name: Create application database user
+  become_user: postgres
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    state: present
+
+- name: Create the application database
+  become_user: postgres
+  postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+    state: present
+
+# THE HEARING AID
+- name: Configure PostgreSQL to listen on all internal network interfaces
+  lineinfile:                                       #this module used to modify line inside a file
+    path: /etc/postgresql/18/main/postgresql.conf   #where module lineinfile search 
+    regexp: '^#?listen_addresses\s*='               #the pattern to search inside this file 
+    line: "listen_addresses = '*'"                  #new line will be written iside this file
+  notify: Restart PostgreSQL
+
+#  THE VIP GUEST LIST (Strict Security: Exact IP only via /32)
+- name: Allow ONLY the exact Backend IP to connect to the database
+  lineinfile:
+    path: /etc/postgresql/18/main/pg_hba.conf         #Host-Based Authentication
+    line: "host    {{ db_name }}    {{ db_user }}    {{ backend_ip }}/32    scram-sha-256"
+    insertafter: EOF          #tell ansible to go to the end of file and past line there
+  notify: Restart PostgreSQL

@@ -1,0 +1,12 @@
+---
+- name: Configure Frontend Web Servers
+  hosts: frontend
+  become: yes
+  roles:
+    - frontend
+
+- name: Configure Database Servers
+  hosts: database
+  become: yes
+  roles:
+    - database
