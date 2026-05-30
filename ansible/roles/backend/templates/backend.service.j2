@@ -1,0 +1,16 @@
+[Unit]
+Description=Python Flask Backend API
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/app/backend
+Environment="DB_HOST={{ db_ip }}"
+Environment="DB_NAME={{ db_name }}"
+Environment="DB_USER={{ db_user }}"
+Environment="DB_PASS={{ db_password }}"
+ExecStart=/home/ubuntu/app/backend/venv/bin/python app.py       #to use our venv
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

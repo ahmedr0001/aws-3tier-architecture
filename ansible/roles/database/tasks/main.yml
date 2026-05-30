@@ -50,3 +50,20 @@
     line: "host    {{ db_name }}    {{ db_user }}    {{ backend_ip }}/32    scram-sha-256"
     insertafter: EOF          #tell ansible to go to the end of file and past line there
   notify: Restart PostgreSQL
+
+
+
+# 5. SEED THE DATABASE (Create table and insert dummy data)
+- name: Create test table and insert success message
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    login_db: "{{ db_name }}" 
+    query: |
+      CREATE TABLE IF NOT EXISTS test_table (
+          id SERIAL PRIMARY KEY,
+          message VARCHAR(255)
+      );
+      GRANT ALL PRIVILEGES ON TABLE test_table TO "{{ db_user }}";
+      INSERT INTO test_table (message) 
+      SELECT 'I think you don''t need to test it .. just trust me' 
+      WHERE NOT EXISTS (SELECT 1 FROM test_table);

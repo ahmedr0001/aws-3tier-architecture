@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ITI Final Project — 3-Tier AWS Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --iti-red: #a6192e;
+      --iti-red-dark: #8b1426;
+      --iti-red-soft: #fdf2f4;
+      --iti-red-border: #f0c4cc;
+      --bg: #f3f4f6;
+      --surface: #ffffff;
+      --surface-muted: #fafafa;
+      --border: #e4e7ec;
+      --border-strong: #d0d5dd;
+      --text: #101828;
+      --text-secondary: #475467;
+      --text-tertiary: #667085;
+      --accent: var(--iti-red);
+      --accent-hover: var(--iti-red-dark);
+      --accent-soft: var(--iti-red-soft);
+      --success: #067647;
+      --success-bg: #ecfdf3;
+      --warn: #b54708;
+      --console-bg: #1a1d23;
+      --console-text: #d0d5dd;
+      --console-muted: #98a2b3;
+      --radius: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+      --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.06);
+      --max: 1120px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(166, 25, 46, 0.04), transparent 42%),
+        radial-gradient(circle at 100% 100%, rgba(166, 25, 46, 0.03), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topbar, .page { position: relative; z-index: 1; }
+
+    /* Top bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 3px solid var(--iti-red);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0.875rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--iti-red);
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .topbar-meta {
+      text-align: right;
+    }
+
+    .project-badge {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--iti-red);
+      background: var(--iti-red-soft);
+      border: 1px solid var(--iti-red-border);
+      padding: 0.3rem 0.65rem;
+      border-radius: 4px;
+    }
+
+    .topbar-track {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 0.35rem;
+    }
+
+    /* Layout */
+    .page {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    .hero {
+      margin-bottom: 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 1.75rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--iti-red);
+    }
+
+    .hero-eyebrow {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--iti-red);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.375rem, 3vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.3;
+      color: var(--text);
+      max-width: 42rem;
+    }
+
+    .hero-lead {
+      margin-top: 0.75rem;
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      max-width: 44rem;
+    }
+
+    .project-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem 1.5rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px dashed var(--border-strong);
+    }
+
+    .project-meta dt {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      margin-bottom: 0.2rem;
+    }
+
+    .project-meta dd {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.625rem;
+      border-bottom: 1px dashed var(--border-strong);
+    }
+
+    .section-head h2 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+    }
+
+    .section-head span {
+      font-size: 0.8125rem;
+      color: var(--text-tertiary);
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      gap: 0.875rem;
+    }
+
+    .card-grid.platform {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card-grid.tiers {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 900px) {
+      .card-grid.tiers { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .card-grid.platform { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.125rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover {
+      border-color: var(--iti-red-border);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card.featured {
+      border-color: var(--iti-red-border);
+      border-left: 3px solid var(--iti-red);
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-index {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      letter-spacing: 0.02em;
+    }
+
+    .card-tag {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .card-tag.neutral {
+      color: var(--text-secondary);
+      background: var(--surface-muted);
+    }
+
+    .card h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+
+    .card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Diagnostics layout */
+    .diagnostics {
+      display: grid;
+      grid-template-columns: minmax(0, 340px) 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 800px) {
+      .diagnostics { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel h2 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    .panel > p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+    }
+
+    .endpoint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .endpoint .method {
+      font-weight: 500;
+      color: var(--success);
+      background: var(--success-bg);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 0.6875rem 1.25rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+      opacity: 0.9;
+    }
+
+    /* Output console */
+    .output-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--surface-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .output-header span {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .output-status {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+    }
+
+    .console {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      background: var(--console-bg);
+      color: var(--console-text);
+      padding: 1.125rem 1.25rem;
+      min-height: 240px;
+      max-height: 400px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .console .line-label {
+      color: var(--console-muted);
+      user-select: none;
+    }
+
+    .console .ok { color: #6ce9a6; }
+    .console .err { color: #fda29b; }
+    .console .json-key { color: #f4a9b8; }
+    .console .json-str { color: #a6f4c5; }
+    .console .json-bool { color: #fec84b; }
+    .console .json-null { color: #98a2b3; }
+
+    footer {
+      margin-top: 2.5rem;
+      padding: 1.25rem 1rem;
+      border-top: 1px dashed var(--border-strong);
+      background: var(--surface);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .footer-brand img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .footer-brand strong {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--iti-red);
+    }
+
+    footer code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img
+          src="assets/iti-logo.png"
+          alt="Information Technology Institute (ITI) logo"
+          class="brand-logo"
+          width="52"
+          height="52"
+        />
+        <div>
+          <span class="brand-text">Information Technology Institute</span>
+          <span class="brand-sub">System Administration Track</span>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <span class="project-badge">Final Project</span>
+        <span class="topbar-track">Terraform &amp; Ansible · AWS 3-Tier</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="hero">
+      <p class="hero-eyebrow">Graduation project — cloud infrastructure</p>
+      <h1>Automated deployment of a 3-tier web application on AWS</h1>
+      <p class="hero-lead">
+        This proof of concept demonstrates end-to-end system administration skills:
+        infrastructure provisioning with <strong>Terraform</strong>, server configuration
+        with <strong>Ansible</strong>, and a production-style stack — Nginx, Python Flask,
+        and PostgreSQL — deployed across public and private subnets on EC2.
+      </p>
+      <dl class="project-meta">
+        <div>
+          <dt>Institution</dt>
+          <dd>ITI — System Administration</dd>
+        </div>
+        <div>
+          <dt>Course focus</dt>
+          <dd>Terraform &amp; Ansible</dd>
+        </div>
+        <div>
+          <dt>Deliverable</dt>
+          <dd>3-Tier AWS Architecture PoC</dd>
+        </div>
+        <div>
+          <dt>Stack</dt>
+          <dd>Nginx · Flask · PostgreSQL</dd>
+        </div>
+      </dl>
+    </div>
+
+    <section class="section" aria-labelledby="platform-heading">
+      <div class="section-head">
+        <h2 id="platform-heading">Platform</h2>
+        <span>Foundation layer</span>
+      </div>
+      <div class="card-grid platform">
+        <article class="card featured">
+          <div class="card-meta">
+            <span class="card-index">Module 01</span>
+            <span class="card-tag">Terraform</span>
+          </div>
+          <h3>Infrastructure provisioning</h3>
+          <p>VPC, public/private subnets, NAT gateways, security groups, and EC2 instances.</p>
+        </article>
+        <article class="card featured">
+          <div class="card-meta">
+            <span class="card-index">Module 02</span>
+            <span class="card-tag">Ansible</span>
+          </div>
+          <h3>Configuration management</h3>
+          <p>Dynamic inventory, roles, playbooks, and ProxyJump for private hosts.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="tiers-heading">
+      <div class="section-head">
+        <h2 id="tiers-heading">Application tiers</h2>
+        <span>Runtime stack</span>
+      </div>
+      <div class="card-grid tiers">
+        <article class="card">
+          <div class="card-meta">
+            <span class="card-index">Tier 1</span>
+            <span class="card-tag neutral">Public</span>
+          </div>
+          <h3>Frontend</h3>
+          <p>Nginx reverse proxy serving static assets.</p>
+        </article>
+        <article class="card">
+          <div class="card-meta">
+            <span class="card-index">Tier 2</span>
+            <span class="card-tag neutral">Private</span>
+          </div>
+          <h3>Backend</h3>
+          <p>Python Flask API on port 5000.</p>
+        </article>
+        <article class="card">
+          <div class="card-meta">
+            <span class="card-index">Tier 3</span>
+            <span class="card-tag neutral">Private</span>
+          </div>
+          <h3>Database</h3>
+          <p>PostgreSQL relational data store.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="diag-heading">
+      <div class="section-head">
+        <h2 id="diag-heading">Diagnostics</h2>
+        <span>Live connectivity test</span>
+      </div>
+      <div class="diagnostics">
+        <div class="panel">
+          <h2>System check</h2>
+          <p>Verify API availability and database connectivity from the application tier.</p>
+          <div class="endpoint">
+            <span class="method">GET</span>
+            <span>/api/status</span>
+          </div>
+          <button type="button" class="btn-primary" id="btnDiagnostics" aria-describedby="terminal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            Run diagnostics
+          </button>
+        </div>
+
+        <div class="panel output-panel">
+          <div class="output-header">
+            <span>Response</span>
+            <span class="output-status" id="outputStatus">Idle</span>
+          </div>
+          <pre class="console" id="terminal" role="log" aria-live="polite"><span class="line-label">› </span>Ready. Select <strong style="font-weight:500;color:var(--console-text)">Run diagnostics</strong> to query the backend.</pre>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-brand">
+        <img src="assets/iti-logo.png" alt="" width="36" height="36" aria-hidden="true" />
+        <div>
+          <strong>ITI — System Administration Track</strong>
+          <span>Final project · Terraform &amp; Ansible on AWS</span>
+        </div>
+      </div>
+      <code>GET /api/status</code>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      const btn = document.getElementById("btnDiagnostics");
+      const terminal = document.getElementById("terminal");
+      const outputStatus = document.getElementById("outputStatus");
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function syntaxHighlightJson(jsonStr) {
+        const escaped = escapeHtml(jsonStr);
+        return escaped.replace(
+          /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\b(null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+          function (match, str, colon, bool, nil, num) {
+            if (colon) return '<span class="json-key">' + str + "</span>" + colon;
+            if (bool) return '<span class="json-bool">' + match + "</span>";
+            if (nil) return '<span class="json-null">' + match + "</span>";
+            if (num) return '<span class="json-str">' + match + "</span>";
+            if (str) return '<span class="json-str">' + str + "</span>";
+            return match;
+          }
+        );
+      }
+
+      function setOutput(html, status) {
+        terminal.innerHTML = html;
+        if (status) outputStatus.textContent = status;
+      }
+
+      btn.addEventListener("click", async function () {
+        btn.disabled = true;
+        setOutput(
+          '<span class="line-label">› </span>GET /api/status\n<span class="line-label">  </span>Request in progress…',
+          "Running"
+        );
+
+        try {
+          const response = await fetch("/api/status", {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
+          const data = await response.json();
+          const formatted = JSON.stringify(data, null, 2);
+          const statusClass = response.ok ? "ok" : "err";
+          const statusText = response.ok ? "Complete" : "Error";
+
+          setOutput(
+            '<span class="line-label">› </span><span class="' + statusClass + '">HTTP ' + response.status + "</span>\n\n" +
+            syntaxHighlightJson(formatted),
+            statusText
+          );
+        } catch (err) {
+          setOutput(
+            '<span class="line-label">› </span><span class="err">Request failed</span>\n\n' +
+            escapeHtml(err.message || String(err)) +
+            '\n\n<span class="line-label">  </span>Confirm Nginx proxies /api/ to the backend on port 5000.',
+            "Failed"
+          );
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

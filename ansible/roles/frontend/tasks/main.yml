@@ -1,15 +1,32 @@
 ---
-# tasks file for frontend
-- name: Update apt cache
-  apt:
-    update_cache: yes
-    
-- name: Install Nginx
+# LOAD DYNAMIC VARS
+- name: Load frontend dynamic variables
+  include_vars: "~/3tier-project/ansible/roles/frontend/vars/main.yml"
+
+# INSTALL NGINX
+- name: Update apt cache and install Nginx
   apt:
     name: nginx
     state: present
+    update_cache: yes
 
-- name: Ensure Nginx is running and enabled on boot
+# DEPLOY FRONTEND WEB PAGE
+- name: Copy index.html to Nginx web root
+  copy:
+    src: "~/3tier-project/app_light/frontend/"
+    dest: "/var/www/html/"
+    owner: www-data
+    group: www-data
+
+# DEPLOY REVERSE PROXY CONFIG
+- name: Deploy Nginx reverse proxy configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+  notify: Restart Nginx
+
+# ENSURE SERVICE IS RUNNING
+- name: Ensure Nginx is running and enabled
   service:
     name: nginx
     state: started

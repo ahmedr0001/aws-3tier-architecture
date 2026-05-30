@@ -43,3 +43,27 @@ resource "local_file" "ansible_inventory" {
   })
   filename = "${path.module}/../ansible/inventory.ini"
 }
+
+# Generate Ansible Variables for Database Role
+resource "local_file" "ansible_db_vars" {
+  content = templatefile("${path.module}/db_vars.tpl", {
+    backend_ip = module.compute.backend_private_ip
+  })
+  filename = "${path.module}/../ansible/roles/database/vars/main.yml"
+}
+
+# Generate Ansible Variables for Backend Role
+resource "local_file" "ansible_backend_vars" {
+  content = templatefile("${path.module}/backend_vars.tpl", {
+    db_ip = module.compute.db_private_ip
+  })
+  filename = "${path.module}/../ansible/roles/backend/vars/main.yml"
+}
+
+# Generate Ansible Variables for Frontend Role
+resource "local_file" "ansible_frontend_vars" {
+  content = templatefile("${path.module}/frontend_vars.tpl", {
+    backend_ip = module.compute.backend_private_ip
+  })
+  filename = "${path.module}/../ansible/roles/frontend/vars/main.yml"
+}

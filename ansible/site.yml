@@ -10,3 +10,9 @@
   become: yes
   roles:
     - database
+
+- name: Configure Backend Python Servers
+  hosts: backend
+  become: yes
+  roles:
+    - backend

@@ -1,2 +1,6 @@
 ---
-# handlers file for backend
+- name: Restart Backend
+  systemd:
+    name: backend
+    state: restarted
+    daemon_reload: yes
